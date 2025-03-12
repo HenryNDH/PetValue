@@ -16,7 +16,7 @@ const productSchema = new Schema({
   quantity: Number,
   expiry: String,
   itemNo: String,
-  urlImage: String, // New field for product image URL
+  urlImage: String,
 });
 const Product = mongoose.model("products", productSchema);
 
@@ -24,6 +24,7 @@ const Product = mongoose.model("products", productSchema);
 const server = http.createServer((req, res) => {
   const parsedUrl = url.parse(req.url, true);
   const { pathname } = parsedUrl;
+  const pathSegments = pathname.split('/').filter(Boolean);
 
   res.writeHead(200, {
     "Content-Type": "application/json",
@@ -51,6 +52,18 @@ const server = http.createServer((req, res) => {
           } catch (error) {
             res.statusCode = 500;
             res.end(JSON.stringify({ error: "Error fetching products" }));
+          }
+        } else if (pathSegments[0] === "products" && pathSegments.length === 2) {
+          try {
+            const product = await Product.findById(pathSegments[1]);
+            if (!product) {
+              res.statusCode = 404;
+              return res.end(JSON.stringify({ error: "Product not found" }));
+            }
+            res.end(JSON.stringify(product));
+          } catch (error) {
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: "Error fetching product by ID" }));
           }
         } else {
           res.end(JSON.stringify({ message: "Welcome to the PetValu Expiry Tracker API." }));

@@ -84,7 +84,30 @@ http://localhost:8080
 
 ---
 
-### **2️⃣ Add a New Product**
+### **2️⃣ Get Product by ID**
+- **Method:** `GET`  
+- **Endpoint:** `/products/:id`  
+- **Description:** Fetch a specific product using its unique ID.  
+- **Example Request:**
+```
+http://localhost:8080/products/67d1fee084dbf091f28d0e72
+```
+- **Response:**
+```json
+{
+  "_id": "67d1fee084dbf091f28d0e72",
+  "name": "Royal Canin Dog Food",
+  "type": ["Dog Food", "Wet Food"],
+  "quantity": 10,
+  "expiry": "2025-12",
+  "itemNo": "D4522011",
+  "urlImage": "https://example.com/dog-food.png"
+}
+```
+
+---
+
+### **3️⃣ Add a New Product**
 - **Method:** `POST`  
 - **Endpoint:** `/products`  
 - **Description:** Add a new product to the database.  
@@ -108,7 +131,7 @@ http://localhost:8080
 
 ---
 
-### **3️⃣ Update a Product**
+### **4️⃣ Update a Product**
 - **Method:** `PUT`  
 - **Endpoint:** `/products`  
 - **Description:** Update an existing product's details.  
@@ -142,7 +165,7 @@ http://localhost:8080
 
 ---
 
-### **4️⃣ Delete a Product**
+### **5️⃣ Delete a Product**
 - **Method:** `DELETE`  
 - **Endpoint:** `/products`  
 - **Description:** Remove a product from the database.  
