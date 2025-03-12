@@ -162,13 +162,6 @@ http://localhost:8080
 
 ---
 
-## 🔥 **Future Enhancements**
-- **User Authentication (JWT)** → Secure access to endpoints.  
-- **GraphQL API Support** → Add flexibility to data retrieval.  
-- **Mobile App Integration** → Allow store managers to check expiries on the go.  
-
----
-
 ## 👨‍💻 **Contributors**
 | Name                | Role            | GitHub                                           | Email                       |
 |--------------------|----------------|--------------------------------------------------|-----------------------------|
