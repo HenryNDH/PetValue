@@ -15,8 +15,9 @@ const productSchema = new Schema({
   type: [String],
   quantity: Number,
   expiry: String,
-  itemNo: String,
   urlImage: String,
+}, {
+  versionKey: false
 });
 const Product = mongoose.model("products", productSchema);
 
