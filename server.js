@@ -12,8 +12,11 @@ mongoose.connect(process.env.MONGODB_URL)
 const Schema = mongoose.Schema;
 const productSchema = new Schema({
   name: String,
-  expiryDate: Date,
+  type: [String],
   quantity: Number,
+  expiry: String,
+  itemNo: String,
+  urlImage: String, // New field for product image URL
 });
 const Product = mongoose.model("products", productSchema);
 
@@ -59,7 +62,7 @@ const server = http.createServer((req, res) => {
           try {
             const newProduct = new Product(body);
             await newProduct.save();
-            res.end(JSON.stringify({ message: "Product added successfully" }));
+            res.end(JSON.stringify({ message: "Product added successfully", product: newProduct }));
           } catch (error) {
             res.statusCode = 500;
             res.end(JSON.stringify({ error: "Error saving product" }));
