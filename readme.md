@@ -76,7 +76,6 @@ http://localhost:8080
     "type": ["Cat Food", "Dry Food"],
     "quantity": 5,
     "expiry": "2026-01",
-    "itemNo": "G6233007",
     "urlImage": "https://example.com/image.png"
   }
 ]
@@ -100,7 +99,6 @@ http://localhost:8080/products/67d1fee084dbf091f28d0e72
   "type": ["Dog Food", "Wet Food"],
   "quantity": 10,
   "expiry": "2025-12",
-  "itemNo": "D4522011",
   "urlImage": "https://example.com/dog-food.png"
 }
 ```
@@ -143,7 +141,6 @@ http://localhost:8080/products/67d1fee084dbf091f28d0e72
   "type": ["Cat Food", "Dry Food"],
   "quantity": 8,
   "expiry": "2027-06",
-  "itemNo": "G6233008",
   "urlImage": "https://example.com/updated-cat-food.png"
 }
 ```
@@ -157,7 +154,6 @@ http://localhost:8080/products/67d1fee084dbf091f28d0e72
     "type": ["Cat Food", "Dry Food"],
     "quantity": 8,
     "expiry": "2027-06",
-    "itemNo": "G6233008",
     "urlImage": "https://example.com/updated-cat-food.png"
   }
 }
