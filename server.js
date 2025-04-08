@@ -87,24 +87,25 @@ const server = http.createServer((req, res) => {
         }
         break;
 
-      case "PUT":
-        if (pathname === "/products") {
-          try {
-            const updatedProduct = await Product.findByIdAndUpdate(body.id, body, { new: true });
-            if (!updatedProduct) {
-              res.statusCode = 404;
-              return res.end(JSON.stringify({ error: "Product not found" }));
+        case "PUT":
+          if (pathSegments[0] === "products" && pathSegments.length === 2) {
+            try {
+              const id = pathSegments[1];
+              const updatedProduct = await Product.findByIdAndUpdate(id, body, { new: true });
+              if (!updatedProduct) {
+                res.statusCode = 404;
+                return res.end(JSON.stringify({ error: "Product not found" }));
+              }
+              res.end(JSON.stringify({ message: "Product updated successfully", product: updatedProduct }));
+            } catch (error) {
+              res.statusCode = 500;
+              res.end(JSON.stringify({ error: "Error updating product" }));
             }
-            res.end(JSON.stringify({ message: "Product updated successfully", product: updatedProduct }));
-          } catch (error) {
-            res.statusCode = 500;
-            res.end(JSON.stringify({ error: "Error updating product" }));
+          } else {
+            res.statusCode = 404;
+            res.end(JSON.stringify({ error: "Invalid endpoint for PUT request" }));
           }
-        } else {
-          res.statusCode = 404;
-          res.end(JSON.stringify({ error: "Invalid endpoint for PUT request" }));
-        }
-        break;
+          break;
 
       case "DELETE":
         if (pathname === "/products") {
