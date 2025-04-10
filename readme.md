@@ -129,9 +129,9 @@ http://localhost:8080/products/67d1fee084dbf091f28d0e72
 
 ---
 
-### **4️⃣ Update a Product**
+### **4️⃣ Update a Product by ID**
 - **Method:** `PUT`  
-- **Endpoint:** `/products`  
+- **Endpoint:** `/products:id`  
 - **Description:** Update an existing product's details.  
 - **Request Body:**
 ```json
