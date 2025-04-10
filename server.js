@@ -107,25 +107,25 @@ const server = http.createServer((req, res) => {
           }
           break;
 
-      case "DELETE":
-        if (pathname === "/products") {
-          try {
-            const result = await Product.deleteOne({ _id: body.id });
-            if (result.deletedCount === 0) {
+          case "DELETE":
+            if (pathSegments[0] === "products" && pathSegments.length === 2) {
+              try {
+                const id = pathSegments[1];  // Capture the ID from the URL
+                const result = await Product.deleteOne({ _id: id });
+                if (result.deletedCount === 0) {
+                  res.statusCode = 404;
+                  return res.end(JSON.stringify({ error: "Product not found" }));
+                }
+                res.end(JSON.stringify({ message: "Product deleted", deletedCount: result.deletedCount }));
+              } catch (error) {
+                res.statusCode = 500;
+                res.end(JSON.stringify({ error: "Error deleting product" }));
+              }
+            } else {
               res.statusCode = 404;
-              return res.end(JSON.stringify({ error: "Product not found" }));
+              res.end(JSON.stringify({ error: "Invalid endpoint for DELETE request" }));
             }
-            res.end(JSON.stringify({ message: "Product deleted", deletedCount: result.deletedCount }));
-          } catch (error) {
-            res.statusCode = 500;
-            res.end(JSON.stringify({ error: "Error deleting product" }));
-          }
-        } else {
-          res.statusCode = 404;
-          res.end(JSON.stringify({ error: "Invalid endpoint for DELETE request" }));
-        }
-        break;
-
+            break;
       default:
         res.statusCode = 404;
         res.end(JSON.stringify({ error: "Invalid request method" }));
