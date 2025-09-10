@@ -16,6 +16,7 @@ const productSchema = new Schema({
   quantity: Number,
   expiry: String,
   urlImage: String,
+  storeID: String
 }, {
   versionKey: false
 });
