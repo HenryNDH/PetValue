@@ -1,14 +1,36 @@
 const http = require("http");
 const url = require("url");
 const mongoose = require("mongoose");
+const admin = require("firebase-admin");
 require("dotenv").config();
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URL)
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+// --- 🔑 Firebase Admin Setup ---
+admin.initializeApp({
+  credential: admin.credential.applicationDefault(),
+  // Or use a service account JSON:
+  // credential: admin.credential.cert(require("./serviceAccountKey.json"))
+});
 
-// Define schema and model
+// Helper to verify Firebase token
+async function verifyToken(req) {
+  const authHeader = req.headers["authorization"];
+  if (!authHeader) return null;
+
+  const token = authHeader.split(" ")[1]; // Expecting "Bearer <token>"
+  try {
+    const decoded = await admin.auth().verifyIdToken(token);
+    return decoded; // contains uid, email, etc.
+  } catch (err) {
+    console.error("Token verification failed:", err.message);
+    return null;
+  }
+}
+
+// --- MongoDB Setup ---
+mongoose.connect(process.env.MONGODB_URL)
+    .then(() => console.log("Connected to MongoDB"))
+    .catch((err) => console.error("MongoDB connection error:", err));
+
 const Schema = mongoose.Schema;
 const productSchema = new Schema({
   name: String,
@@ -22,7 +44,7 @@ const productSchema = new Schema({
 });
 const Product = mongoose.model("products", productSchema);
 
-// Create HTTP server
+// --- HTTP Server ---
 const server = http.createServer((req, res) => {
   const parsedUrl = url.parse(req.url, true);
   const { pathname } = parsedUrl;
@@ -32,17 +54,27 @@ const server = http.createServer((req, res) => {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
   });
 
   let body = "";
   req.on("data", (chunk) => (body += chunk));
   req.on("end", async () => {
     try {
-      if (body) body = JSON.parse(body); // Parse only if there is a body
+      if (body) body = JSON.parse(body);
     } catch (error) {
       res.statusCode = 400;
       return res.end(JSON.stringify({ error: "Invalid JSON format" }));
+    }
+
+    // --- Authentication Check for protected routes ---
+    let user = null;
+    if (["POST", "PUT", "DELETE"].includes(req.method)) {
+      user = await verifyToken(req);
+      if (!user) {
+        res.statusCode = 401;
+        return res.end(JSON.stringify({ error: "Unauthorized: Missing or invalid token" }));
+      }
     }
 
     switch (req.method) {
@@ -75,7 +107,10 @@ const server = http.createServer((req, res) => {
       case "POST":
         if (pathname === "/products") {
           try {
-            const newProduct = new Product(body);
+            const newProduct = new Product({
+              ...body,
+              storeID: user.uid, // link product to logged-in user
+            });
             await newProduct.save();
             res.end(JSON.stringify({ message: "Product added successfully", product: newProduct }));
           } catch (error) {
@@ -88,45 +123,46 @@ const server = http.createServer((req, res) => {
         }
         break;
 
-        case "PUT":
-          if (pathSegments[0] === "products" && pathSegments.length === 2) {
-            try {
-              const id = pathSegments[1];
-              const updatedProduct = await Product.findByIdAndUpdate(id, body, { new: true });
-              if (!updatedProduct) {
-                res.statusCode = 404;
-                return res.end(JSON.stringify({ error: "Product not found" }));
-              }
-              res.end(JSON.stringify({ message: "Product updated successfully", product: updatedProduct }));
-            } catch (error) {
-              res.statusCode = 500;
-              res.end(JSON.stringify({ error: "Error updating product" }));
-            }
-          } else {
-            res.statusCode = 404;
-            res.end(JSON.stringify({ error: "Invalid endpoint for PUT request" }));
-          }
-          break;
-
-          case "DELETE":
-            if (pathSegments[0] === "products" && pathSegments.length === 2) {
-              try {
-                const id = pathSegments[1];  // Capture the ID from the URL
-                const result = await Product.deleteOne({ _id: id });
-                if (result.deletedCount === 0) {
-                  res.statusCode = 404;
-                  return res.end(JSON.stringify({ error: "Product not found" }));
-                }
-                res.end(JSON.stringify({ message: "Product deleted", deletedCount: result.deletedCount }));
-              } catch (error) {
-                res.statusCode = 500;
-                res.end(JSON.stringify({ error: "Error deleting product" }));
-              }
-            } else {
+      case "PUT":
+        if (pathSegments[0] === "products" && pathSegments.length === 2) {
+          try {
+            const id = pathSegments[1];
+            const updatedProduct = await Product.findByIdAndUpdate(id, body, { new: true });
+            if (!updatedProduct) {
               res.statusCode = 404;
-              res.end(JSON.stringify({ error: "Invalid endpoint for DELETE request" }));
+              return res.end(JSON.stringify({ error: "Product not found" }));
             }
-            break;
+            res.end(JSON.stringify({ message: "Product updated successfully", product: updatedProduct }));
+          } catch (error) {
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: "Error updating product" }));
+          }
+        } else {
+          res.statusCode = 404;
+          res.end(JSON.stringify({ error: "Invalid endpoint for PUT request" }));
+        }
+        break;
+
+      case "DELETE":
+        if (pathSegments[0] === "products" && pathSegments.length === 2) {
+          try {
+            const id = pathSegments[1];
+            const result = await Product.deleteOne({ _id: id });
+            if (result.deletedCount === 0) {
+              res.statusCode = 404;
+              return res.end(JSON.stringify({ error: "Product not found" }));
+            }
+            res.end(JSON.stringify({ message: "Product deleted", deletedCount: result.deletedCount }));
+          } catch (error) {
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: "Error deleting product" }));
+          }
+        } else {
+          res.statusCode = 404;
+          res.end(JSON.stringify({ error: "Invalid endpoint for DELETE request" }));
+        }
+        break;
+
       default:
         res.statusCode = 404;
         res.end(JSON.stringify({ error: "Invalid request method" }));
